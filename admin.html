@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Admina — Marcin Kot</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Montserrat:wght@200;400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --gold: #c9a84c; --gold-dim: rgba(201,168,76,0.15);
+    --cream: #f5f0e8; --dark: #0d0d0d; --mid: #161616; --panel: #1c1c1c;
+    --border: rgba(255,255,255,0.07); --red: #c0392b; --green: #27ae60;
+  }
+  body { font-family: 'Montserrat', sans-serif; background: var(--dark); color: var(--cream); min-height: 100vh; }
+
+  /* TOP BAR */
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 1.1rem 2.5rem; background: var(--mid); border-bottom: 1px solid var(--gold-dim); position: sticky; top: 0; z-index: 100; }
+  .topbar-brand { display: flex; align-items: center; gap: 1rem; }
+  .topbar-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; font-weight: 300; letter-spacing: 0.15em; color: var(--gold); }
+  .topbar-sep { width: 1px; height: 20px; background: var(--border); }
+  .topbar-title { font-size: 0.6rem; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(245,240,232,0.4); }
+  .back-link { display: flex; align-items: center; gap: 0.5rem; font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(245,240,232,0.4); text-decoration: none; transition: color 0.3s; border: 1px solid var(--border); padding: 0.5rem 1rem; }
+  .back-link:hover { color: var(--gold); border-color: var(--gold-dim); }
+
+  /* LAYOUT */
+  .admin-wrap { max-width: 900px; margin: 0 auto; padding: 3rem 2rem 5rem; }
+  .admin-header { margin-bottom: 2.5rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border); }
+  .admin-eyebrow { font-size: 0.55rem; letter-spacing: 0.4em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.7rem; }
+  .admin-heading { font-family: 'Cormorant Garamond', serif; font-size: 2.8rem; font-weight: 300; }
+  .admin-sub { font-size: 0.7rem; color: rgba(245,240,232,0.35); margin-top: 0.5rem; line-height: 1.7; }
+  .admin-sub code { font-family: monospace; background: rgba(255,255,255,0.06); padding: 0.1em 0.4em; border-radius: 3px; font-size: 0.85em; color: var(--gold); }
+
+  /* STATUS BAR */
+  .status-bar { display: flex; align-items: center; gap: 0.8rem; padding: 0.8rem 1.2rem; background: var(--panel); border: 1px solid var(--border); margin-bottom: 2rem; font-size: 0.65rem; letter-spacing: 0.1em; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.15); flex-shrink: 0; transition: background 0.3s; }
+  .status-dot.ok { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .status-dot.err { background: var(--red); box-shadow: 0 0 6px var(--red); }
+  .status-dot.loading { background: var(--gold); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .status-text { color: rgba(245,240,232,0.5); }
+  .status-text span { color: var(--cream); }
+
+  /* STATS */
+  .stats-bar { display: flex; gap: 1px; background: var(--border); margin-bottom: 2rem; border: 1px solid var(--border); }
+  .stat-item { flex: 1; background: var(--panel); padding: 1.2rem 1.5rem; text-align: center; }
+  .stat-number { font-family: 'Cormorant Garamond', serif; font-size: 2.5rem; font-weight: 300; color: var(--gold); line-height: 1; }
+  .stat-label { font-size: 0.55rem; letter-spacing: 0.25em; text-transform: uppercase; color: rgba(245,240,232,0.3); margin-top: 0.4rem; }
+
+  /* CARD */
+  .card { background: var(--panel); border: 1px solid var(--border); margin-bottom: 2rem; overflow: hidden; }
+  .card-header { display: flex; align-items: center; justify-content: space-between; padding: 1.2rem 1.8rem; border-bottom: 1px solid var(--border); }
+  .card-header.clickable { cursor: pointer; user-select: none; }
+  .card-header-left { display: flex; align-items: center; gap: 1rem; }
+  .card-icon { width: 32px; height: 32px; border: 1px solid var(--gold-dim); display: flex; align-items: center; justify-content: center; font-size: 0.9rem; color: var(--gold); flex-shrink: 0; }
+  .card-title { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; }
+  .card-toggle { font-size: 0.7rem; color: rgba(245,240,232,0.3); transition: transform 0.3s; }
+  .card-toggle.open { transform: rotate(180deg); }
+  .card-body { padding: 1.8rem; }
+
+  /* FORM */
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; margin-bottom: 1.2rem; }
+  .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+  .form-row.full { grid-template-columns: 1fr; }
+  .field { display: flex; flex-direction: column; gap: 0.5rem; }
+  .field label { font-size: 0.55rem; letter-spacing: 0.3em; text-transform: uppercase; color: rgba(245,240,232,0.4); }
+  .field input, .field select { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 2px; color: var(--cream); font-family: 'Montserrat', sans-serif; font-size: 0.8rem; padding: 0.75rem 1rem; outline: none; transition: border-color 0.3s; width: 100%; }
+  .field input:focus, .field select:focus { border-color: rgba(201,168,76,0.5); }
+  .field input::placeholder { color: rgba(245,240,232,0.2); }
+  .field select option { background: var(--mid); color: var(--cream); }
+  .form-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 0.5rem; }
+
+  /* BUTTONS */
+  .btn-primary { padding: 0.75rem 2rem; background: var(--gold); color: var(--dark); border: none; font-family: 'Montserrat', sans-serif; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; transition: opacity 0.3s; }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-ghost { padding: 0.75rem 1.5rem; background: transparent; color: rgba(245,240,232,0.4); border: 1px solid var(--border); font-family: 'Montserrat', sans-serif; font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; transition: color 0.3s, border-color 0.3s; }
+  .btn-ghost:hover { color: var(--cream); border-color: rgba(255,255,255,0.2); }
+
+  /* CONCERT ROWS */
+  .list-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.8rem; }
+  .sort-hint { font-size: 0.6rem; letter-spacing: 0.1em; color: rgba(245,240,232,0.25); }
+  .btn-reset { padding: 0.5rem 1rem; background: transparent; color: rgba(245,240,232,0.3); border: 1px solid var(--border); font-family: 'Montserrat', sans-serif; font-size: 0.55rem; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; transition: color 0.3s, border-color 0.3s; }
+  .btn-reset:hover { color: var(--red); border-color: rgba(192,57,43,0.4); }
+
+  .concert-row { background: var(--panel); border: 1px solid var(--border); margin-bottom: 0.6rem; display: grid; grid-template-columns: 80px 1fr auto; align-items: center; padding: 1rem 1.5rem; gap: 1.5rem; transition: border-color 0.3s; }
+  .concert-row:hover { border-color: var(--gold-dim); }
+  .concert-row.editing { border-color: rgba(201,168,76,0.5); }
+  .row-date { text-align: center; border-right: 1px solid var(--border); padding-right: 1.5rem; }
+  .row-day { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 300; color: var(--gold); line-height: 1; }
+  .row-my { font-size: 0.5rem; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(245,240,232,0.4); margin-top: 0.2rem; }
+  .row-name { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 300; margin-bottom: 0.2rem; }
+  .row-place { font-size: 0.62rem; letter-spacing: 0.08em; color: rgba(245,240,232,0.4); }
+  .row-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+  .action-btn { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; background: transparent; border: 1px solid var(--border); color: rgba(245,240,232,0.4); cursor: pointer; font-size: 0.75rem; transition: all 0.2s; }
+  .action-btn.edit:hover { border-color: var(--gold-dim); color: var(--gold); }
+  .action-btn.del:hover  { border-color: rgba(192,57,43,0.4); color: var(--red); }
+  .action-btn.up:hover, .action-btn.dn:hover { border-color: rgba(245,240,232,0.2); color: var(--cream); }
+
+  /* INLINE EDIT */
+  .edit-form { display: none; background: rgba(201,168,76,0.04); border-top: 1px solid var(--gold-dim); padding: 1.4rem 1.5rem; grid-column: 1 / -1; }
+  .edit-form.open { display: block; }
+  .edit-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+  .edit-actions { display: flex; gap: 0.8rem; justify-content: flex-end; }
+  .field input.ef { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 2px; color: var(--cream); font-family: 'Montserrat', sans-serif; font-size: 0.75rem; padding: 0.6rem 0.8rem; outline: none; width: 100%; transition: border-color 0.3s; }
+  .field input.ef:focus { border-color: rgba(201,168,76,0.5); }
+  .btn-save { padding: 0.6rem 1.5rem; background: var(--gold); color: var(--dark); border: none; font-family: 'Montserrat', sans-serif; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; }
+  .btn-save:hover { opacity: 0.85; }
+  .btn-save:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-cancel { padding: 0.6rem 1rem; background: transparent; color: rgba(245,240,232,0.3); border: 1px solid var(--border); font-family: 'Montserrat', sans-serif; font-size: 0.6rem; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; }
+  .btn-cancel:hover { color: var(--cream); }
+
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 4rem 2rem; background: var(--panel); border: 1px dashed var(--border); color: rgba(245,240,232,0.2); }
+  .empty-state-icon { font-size: 2rem; margin-bottom: 1rem; }
+  .empty-state-text { font-size: 0.7rem; letter-spacing: 0.2em; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 2rem; right: 2rem; padding: 0.9rem 1.5rem; background: var(--panel); border-left: 3px solid var(--gold); font-size: 0.7rem; letter-spacing: 0.1em; color: var(--cream); transform: translateY(80px); opacity: 0; transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1); pointer-events: none; z-index: 999; max-width: 320px; }
+  .toast.success { border-color: var(--green); }
+  .toast.danger { border-color: var(--red); }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* SPINNER */
+  .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(13,13,13,0.3); border-top-color: var(--dark); border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 6px; vertical-align: middle; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 500; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; backdrop-filter: blur(4px); }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal { background: var(--panel); border: 1px solid var(--border); padding: 2.5rem; max-width: 380px; width: 90%; text-align: center; transform: scale(0.9); transition: transform 0.3s; }
+  .modal-overlay.open .modal { transform: scale(1); }
+  .modal-icon { font-size: 1.8rem; color: var(--red); margin-bottom: 1rem; }
+  .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 300; margin-bottom: 0.7rem; }
+  .modal-text { font-size: 0.7rem; color: rgba(245,240,232,0.5); line-height: 1.6; margin-bottom: 2rem; }
+  .modal-concert-name { color: var(--gold); }
+  .modal-actions { display: flex; gap: 1rem; justify-content: center; }
+  .btn-danger { padding: 0.7rem 1.8rem; background: var(--red); color: #fff; border: none; font-family: 'Montserrat', sans-serif; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; }
+  .btn-danger:hover { opacity: 0.85; }
+
+  @media (max-width: 640px) {
+    .admin-wrap { padding: 2rem 1rem 4rem; } .topbar { padding: 1rem 1.2rem; }
+    .form-row, .form-row.three, .edit-row { grid-template-columns: 1fr; }
+    .stats-bar { flex-direction: column; gap: 1px; }
+    .concert-row { grid-template-columns: 60px 1fr; }
+    .row-actions { grid-column: 1 / -1; justify-content: flex-end; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">
+    <span class="topbar-logo">MARCIN KOT</span>
+    <div class="topbar-sep"></div>
+    <span class="topbar-title">Panel Admina</span>
+  </div>
+  <a href="index.html" class="back-link">← Wróć do strony</a>
+</div>
+
+<div class="admin-wrap">
+
+  <div class="admin-header">
+    <p class="admin-eyebrow">Zarządzanie treścią</p>
+    <h1 class="admin-heading">Koncerty</h1>
+    <p class="admin-sub">
+      Zmiany są zapisywane bezpośrednio do pliku <code>concerts.json</code> w repozytorium GitHub.<br>
+      Po zapisaniu strona główna odświeży dane przy następnym załadowaniu.
+    </p>
+  </div>
+
+  <!-- STATUS -->
+  <div class="status-bar" id="statusBar">
+    <div class="status-dot loading" id="statusDot"></div>
+    <span class="status-text" id="statusText">Łączenie z GitHub...</span>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-bar">
+    <div class="stat-item"><div class="stat-number" id="statTotal">—</div><div class="stat-label">Wszystkich</div></div>
+    <div class="stat-item"><div class="stat-number" id="statUpcoming">—</div><div class="stat-label">Nadchodzących</div></div>
+    <div class="stat-item"><div class="stat-number" id="statPast">—</div><div class="stat-label">Minionych</div></div>
+  </div>
+
+  <!-- ADD FORM -->
+  <div class="card" id="addCard">
+    <div class="card-header clickable" id="addCardHeader">
+      <div class="card-header-left">
+        <div class="card-icon">+</div>
+        <span class="card-title">Dodaj nowy koncert</span>
+      </div>
+      <span class="card-toggle open" id="addToggle">▲</span>
+    </div>
+    <div class="card-body" id="addBody">
+      <div class="form-row three">
+        <div class="field"><label>Dzień *</label><input type="text" id="newDay" placeholder="np. 15" maxlength="2"></div>
+        <div class="field">
+          <label>Miesiąc *</label>
+          <select id="newMonth">
+            <option value="">— wybierz —</option>
+            <option>STY</option><option>LUT</option><option>MAR</option><option>APR</option>
+            <option>MAJ</option><option>CZE</option><option>LIP</option><option>SIE</option>
+            <option>WRZ</option><option>PAZ</option><option>LIS</option><option>GRU</option>
+          </select>
+        </div>
+        <div class="field"><label>Rok *</label><input type="text" id="newYear" placeholder="np. 2026" maxlength="4"></div>
+      </div>
+      <div class="form-row full">
+        <div class="field"><label>Nazwa koncertu *</label><input type="text" id="newName" placeholder="np. Wieczór Chopinowski"></div>
+      </div>
+      <div class="form-row full">
+        <div class="field"><label>Miejsce i miasto *</label><input type="text" id="newPlace" placeholder="np. Filharmonia Narodowa — Warszawa"></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-ghost" onclick="clearForm()">Wyczyść</button>
+        <button class="btn-primary" id="addBtn" onclick="addConcert()">Dodaj koncert</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIST -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-left">
+        <div class="card-icon">♩</div>
+        <span class="card-title">Lista koncertów</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <span class="sort-hint">↑↓ zmień kolejność</span>
+        <button class="btn-reset" onclick="confirmReset()">Resetuj do domyślnych</button>
+      </div>
+    </div>
+    <div class="card-body" style="padding:1.2rem;">
+      <div id="concertRows"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- DELETE MODAL -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal">
+    <div class="modal-icon">⚠</div>
+    <h2 class="modal-title">Usuń koncert?</h2>
+    <p class="modal-text">Zamierzasz usunąć:<br><span class="modal-concert-name" id="deleteModalName"></span><br><br>Ta zmiana zostanie zapisana w repozytorium GitHub.</p>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeDeleteModal()">Anuluj</button>
+      <button class="btn-danger" id="confirmDeleteBtn" onclick="confirmDelete()">Usuń i zapisz</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESET MODAL -->
+<div class="modal-overlay" id="resetModal">
+  <div class="modal">
+    <div class="modal-icon">⟲</div>
+    <h2 class="modal-title">Reset danych?</h2>
+    <p class="modal-text">Lista wróci do domyślnych koncertów przykładowych. Zmiana zostanie zapisana w repozytorium GitHub.</p>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="document.getElementById('resetModal').classList.remove('open')">Anuluj</button>
+      <button class="btn-danger" id="confirmResetBtn" onclick="doReset()">Resetuj i zapisz</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ══════════════════════════════════════════════════════
+  // ⚙️  KONFIGURACJA — uzupełnij przed wgraniem na GitHub!
+  // ══════════════════════════════════════════════════════
+  const GITHUB_USER   = 'TWOJ_LOGIN';        // np. "jankowalski"
+  const GITHUB_REPO   = 'NAZWA_REPO';        // np. "strona-muzyka"
+  const GITHUB_BRANCH = 'main';              // lub "master"
+  const GITHUB_TOKEN  = 'TWOJ_TOKEN';        // ghp_xxxxxxxxxxxxxxxxxxxx
+  // Jak uzyskać token: github.com → Settings → Developer settings
+  // → Personal access tokens → Fine-grained tokens
+  // → Repository access: tylko to repo
+  // → Permissions → Contents → Read and write
+  // ══════════════════════════════════════════════════════
+
+  const FILE_PATH = 'concerts.json';
+  const API_BASE  = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${FILE_PATH}`;
+  const RAW_URL   = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${FILE_PATH}`;
+
+  const DEFAULT_CONCERTS = [
+    { id: 1, day: '15', monthYear: 'MAR 2026', name: 'Wieczór Chopinowski',  place: 'Filharmonia Narodowa — Warszawa' },
+    { id: 2, day: '02', monthYear: 'APR 2026', name: 'Muzyka bez granic',    place: 'Centrum Kongresowe — Kraków' },
+    { id: 3, day: '20', monthYear: 'MAY 2026', name: 'Solo — Intymnie',      place: 'Stara Fabryka — Łódź' },
+    { id: 4, day: '07', monthYear: 'JUN 2026', name: 'Summer Jazz Festival', place: 'Amfiteatr Leśny — Sopot' },
+  ];
+
+  let concerts  = [];
+  let fileSHA   = null;   // SHA bieżącego pliku (wymagane przez GitHub API do aktualizacji)
+  let deleteTargetId = null;
+  let isSaving  = false;
+
+  // ═══════════════════════════════════
+  // GITHUB API
+  // ═══════════════════════════════════
+  async function ghFetch(url, method = 'GET', body = null) {
+    const opts = {
+      method,
+      headers: {
+        'Authorization': `Bearer ${GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28'
+      }
+    };
+    if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+    const res = await fetch(url, opts);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.message || `HTTP ${res.status}`);
+    }
+    return res.json();
+  }
+
+  // Pobierz plik z repo (zwraca { content, sha })
+  async function fetchFile() {
+    const data = await ghFetch(`${API_BASE}?ref=${GITHUB_BRANCH}`);
+    const json = JSON.parse(atob(data.content.replace(/\n/g, '')));
+    return { concerts: json, sha: data.sha };
+  }
+
+  // Zapisz plik do repo
+  async function saveFile(data, message) {
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+    const body = { message, content, branch: GITHUB_BRANCH };
+    if (fileSHA) body.sha = fileSHA;
+    const res = await ghFetch(API_BASE, 'PUT', body);
+    fileSHA = res.content.sha;
+    return res;
+  }
+
+  // ═══════════════════════════════════
+  // INIT — załaduj dane z GitHub
+  // ═══════════════════════════════════
+  async function init() {
+    setStatus('loading', 'Łączenie z GitHub...');
+    try {
+      const { concerts: data, sha } = await fetchFile();
+      fileSHA  = sha;
+      concerts = data;
+      setStatus('ok', `Połączono — ostatnia zmiana: <span>${new Date().toLocaleTimeString('pl-PL')}</span>`);
+      render();
+      updateStats();
+    } catch (err) {
+      setStatus('err', `Błąd połączenia: <span>${err.message}</span>`);
+      showToast('Nie udało się załadować danych z GitHub', 'danger');
+      console.error(err);
+    }
+  }
+
+  // ═══════════════════════════════════
+  // STATUS BAR
+  // ═══════════════════════════════════
+  function setStatus(type, html) {
+    document.getElementById('statusDot').className = `status-dot ${type}`;
+    document.getElementById('statusText').innerHTML = html;
+  }
+
+  // ═══════════════════════════════════
+  // RENDER
+  // ═══════════════════════════════════
+  function render() {
+    const container = document.getElementById('concertRows');
+    if (!concerts.length) {
+      container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">♩</div><div class="empty-state-text">Brak koncertów — dodaj pierwszy powyżej</div></div>`;
+      return;
+    }
+    container.innerHTML = concerts.map((c, idx) => `
+      <div class="concert-row" id="row-${c.id}">
+        <div class="row-date">
+          <div class="row-day">${c.day}</div>
+          <div class="row-my">${c.monthYear}</div>
+        </div>
+        <div class="row-info">
+          <div class="row-name">${c.name}</div>
+          <div class="row-place">${c.place}</div>
+        </div>
+        <div class="row-actions">
+          ${idx > 0 ? `<button class="action-btn up" onclick="moveUp(${c.id})" title="W górę">↑</button>` : '<span style="width:34px"></span>'}
+          ${idx < concerts.length-1 ? `<button class="action-btn dn" onclick="moveDown(${c.id})" title="W dół">↓</button>` : '<span style="width:34px"></span>'}
+          <button class="action-btn edit" onclick="toggleEdit(${c.id})" title="Edytuj">✎</button>
+          <button class="action-btn del" onclick="openDeleteModal(${c.id})" title="Usuń">✕</button>
+        </div>
+        <div class="edit-form" id="ef-${c.id}">
+          <div class="edit-row">
+            <div class="field"><label>Dzień</label><input class="ef" type="text" id="ef-day-${c.id}" value="${c.day}" maxlength="2"></div>
+            <div class="field"><label>Miesiąc + Rok (np. MAR 2026)</label><input class="ef" type="text" id="ef-my-${c.id}" value="${c.monthYear}"></div>
+            <div class="field"><label>Nazwa koncertu</label><input class="ef" type="text" id="ef-name-${c.id}" value="${c.name}"></div>
+          </div>
+          <div class="edit-row" style="grid-template-columns:1fr;">
+            <div class="field"><label>Miejsce i miasto</label><input class="ef" type="text" id="ef-place-${c.id}" value="${c.place}"></div>
+          </div>
+          <div class="edit-actions">
+            <button class="btn-cancel" onclick="cancelEdit(${c.id})">Anuluj</button>
+            <button class="btn-save" id="save-${c.id}" onclick="saveEdit(${c.id})">Zapisz na GitHub</button>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+
+  function updateStats() {
+    document.getElementById('statTotal').textContent = concerts.length;
+    const yr = new Date().getFullYear();
+    const up = concerts.filter(c => parseInt(c.monthYear.split(' ')[1]) >= yr).length;
+    document.getElementById('statUpcoming').textContent = up;
+    document.getElementById('statPast').textContent = concerts.length - up;
+  }
+
+  // ═══════════════════════════════════
+  // ADD
+  // ═══════════════════════════════════
+  async function addConcert() {
+    if (isSaving) return;
+    const day   = document.getElementById('newDay').value.trim();
+    const month = document.getElementById('newMonth').value;
+    const year  = document.getElementById('newYear').value.trim();
+    const name  = document.getElementById('newName').value.trim();
+    const place = document.getElementById('newPlace').value.trim();
+
+    if (!day || !month || !year || !name || !place) { showToast('Wypełnij wszystkie pola *', 'danger'); return; }
+    if (isNaN(+day) || +day < 1 || +day > 31) { showToast('Nieprawidłowy dzień (1–31)', 'danger'); return; }
+    if (year.length !== 4 || isNaN(+year))    { showToast('Rok musi mieć 4 cyfry', 'danger'); return; }
+
+    const newConcert = {
+      id: concerts.length ? Math.max(...concerts.map(c => c.id)) + 1 : 1,
+      day: day.padStart(2,'0'),
+      monthYear: `${month} ${year}`,
+      name, place
+    };
+    concerts.push(newConcert);
+
+    await persistToGitHub(`Dodano koncert: ${name} (${day} ${month} ${year})`, 'addBtn');
+    clearForm();
+    render();
+    updateStats();
+  }
+
+  function clearForm() {
+    ['newDay','newYear','newName','newPlace'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('newMonth').value = '';
+  }
+
+  // ═══════════════════════════════════
+  // EDIT
+  // ═══════════════════════════════════
+  function toggleEdit(id) {
+    const ef = document.getElementById(`ef-${id}`);
+    const row = document.getElementById(`row-${id}`);
+    const isOpen = ef.classList.contains('open');
+    document.querySelectorAll('.edit-form.open').forEach(el => el.classList.remove('open'));
+    document.querySelectorAll('.concert-row.editing').forEach(el => el.classList.remove('editing'));
+    if (!isOpen) { ef.classList.add('open'); row.classList.add('editing'); }
+  }
+
+  function cancelEdit(id) {
+    document.getElementById(`ef-${id}`).classList.remove('open');
+    document.getElementById(`row-${id}`).classList.remove('editing');
+  }
+
+  async function saveEdit(id) {
+    if (isSaving) return;
+    const day   = document.getElementById(`ef-day-${id}`).value.trim();
+    const my    = document.getElementById(`ef-my-${id}`).value.trim();
+    const name  = document.getElementById(`ef-name-${id}`).value.trim();
+    const place = document.getElementById(`ef-place-${id}`).value.trim();
+    if (!day || !my || !name || !place) { showToast('Wszystkie pola są wymagane', 'danger'); return; }
+
+    const idx = concerts.findIndex(c => c.id === id);
+    if (idx > -1) concerts[idx] = { id, day: day.padStart(2,'0'), monthYear: my, name, place };
+
+    await persistToGitHub(`Zaktualizowano koncert: ${name}`, `save-${id}`);
+    render();
+    updateStats();
+  }
+
+  // ═══════════════════════════════════
+  // DELETE
+  // ═══════════════════════════════════
+  function openDeleteModal(id) {
+    const c = concerts.find(c => c.id === id);
+    if (!c) return;
+    deleteTargetId = id;
+    document.getElementById('deleteModalName').textContent = `${c.name} — ${c.day} ${c.monthYear}`;
+    document.getElementById('deleteModal').classList.add('open');
+  }
+
+  function closeDeleteModal() {
+    document.getElementById('deleteModal').classList.remove('open');
+    deleteTargetId = null;
+  }
+
+  async function confirmDelete() {
+    if (deleteTargetId === null || isSaving) return;
+    const c = concerts.find(c => c.id === deleteTargetId);
+    concerts = concerts.filter(c => c.id !== deleteTargetId);
+    closeDeleteModal();
+    await persistToGitHub(`Usunięto koncert: ${c ? c.name : deleteTargetId}`, 'confirmDeleteBtn');
+    render();
+    updateStats();
+  }
+
+  // ═══════════════════════════════════
+  // REORDER
+  // ═══════════════════════════════════
+  async function moveUp(id) {
+    const idx = concerts.findIndex(c => c.id === id);
+    if (idx <= 0) return;
+    [concerts[idx-1], concerts[idx]] = [concerts[idx], concerts[idx-1]];
+    await persistToGitHub('Zmieniono kolejność koncertów');
+    render();
+  }
+
+  async function moveDown(id) {
+    const idx = concerts.findIndex(c => c.id === id);
+    if (idx < 0 || idx >= concerts.length-1) return;
+    [concerts[idx], concerts[idx+1]] = [concerts[idx+1], concerts[idx]];
+    await persistToGitHub('Zmieniono kolejność koncertów');
+    render();
+  }
+
+  // ═══════════════════════════════════
+  // RESET
+  // ═══════════════════════════════════
+  function confirmReset() { document.getElementById('resetModal').classList.add('open'); }
+
+  async function doReset() {
+    if (isSaving) return;
+    concerts = JSON.parse(JSON.stringify(DEFAULT_CONCERTS));
+    document.getElementById('resetModal').classList.remove('open');
+    await persistToGitHub('Reset do domyślnej listy koncertów', 'confirmResetBtn');
+    render();
+    updateStats();
+  }
+
+  // ═══════════════════════════════════
+  // PERSIST — zapis do GitHub
+  // ═══════════════════════════════════
+  async function persistToGitHub(commitMessage, btnId = null) {
+    isSaving = true;
+    if (btnId) setBtnLoading(btnId, true);
+    setStatus('loading', `Zapisywanie na GitHub...`);
+    try {
+      await saveFile(concerts, commitMessage);
+      setStatus('ok', `Zapisano o <span>${new Date().toLocaleTimeString('pl-PL')}</span> — <span>${commitMessage}</span>`);
+      showToast('Zapisano na GitHub ✓', 'success');
+    } catch (err) {
+      setStatus('err', `Błąd zapisu: <span>${err.message}</span>`);
+      showToast(`Błąd: ${err.message}`, 'danger');
+      console.error(err);
+    } finally {
+      isSaving = false;
+      if (btnId) setBtnLoading(btnId, false);
+    }
+  }
+
+  function setBtnLoading(id, loading) {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.disabled = loading;
+    if (loading) {
+      btn._orig = btn.innerHTML;
+      btn.innerHTML = `<span class="spinner"></span>Zapisywanie...`;
+    } else {
+      btn.innerHTML = btn._orig || btn.innerHTML;
+    }
+  }
+
+  // ═══════════════════════════════════
+  // TOAST
+  // ═══════════════════════════════════
+  let toastTimer;
+  function showToast(msg, type = 'success') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = `toast ${type} show`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+  }
+
+  // ═══════════════════════════════════
+  // UI HELPERS
+  // ═══════════════════════════════════
+  document.getElementById('addCardHeader').addEventListener('click', () => {
+    const body   = document.getElementById('addBody');
+    const toggle = document.getElementById('addToggle');
+    const hidden = body.style.display === 'none';
+    body.style.display = hidden ? 'block' : 'none';
+    toggle.classList.toggle('open', hidden);
+  });
+
+  document.getElementById('deleteModal').addEventListener('click', function(e) { if (e.target === this) closeDeleteModal(); });
+  document.getElementById('resetModal').addEventListener('click',  function(e) { if (e.target === this) document.getElementById('resetModal').classList.remove('open'); });
+
+  ['newDay','newYear','newName','newPlace'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') addConcert(); });
+  });
+
+  // ═══════════════════════════════════
+  // START
+  // ═══════════════════════════════════
+  init();
+</script>
+</body>
+</html>
