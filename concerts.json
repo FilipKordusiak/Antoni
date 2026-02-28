@@ -7,18 +7,18 @@
     "place": "Filharmonia Narodowa â Warszawa"
   },
   {
-    "id": 2,
-    "day": "02",
-    "monthYear": "APR 2026",
-    "name": "Muzyka bez granic",
-    "place": "Centrum Kongresowe â KrakÃ³w"
-  },
-  {
     "id": 3,
     "day": "20",
     "monthYear": "MAY 2026",
     "name": "Solo â Intymnie",
     "place": "Stara Fabryka â ÅÃ³dÅº"
+  },
+  {
+    "id": 2,
+    "day": "02",
+    "monthYear": "APR 2026",
+    "name": "Muzyka bez granic",
+    "place": "Centrum Kongresowe â KrakÃ³w"
   },
   {
     "id": 4,
