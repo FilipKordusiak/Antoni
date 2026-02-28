@@ -1,17 +1,17 @@
 [
   {
-    "id": 2,
-    "day": "02",
-    "monthYear": "APR 2026",
-    "name": "Muzyka bez granic",
-    "place": "Centrum Kongresowe â KrakÃ³w"
-  },
-  {
     "id": 1,
     "day": "15",
     "monthYear": "MAR 2026",
     "name": "WieczÃ³r Chopinowski",
     "place": "Filharmonia Narodowa â Warszawa"
+  },
+  {
+    "id": 2,
+    "day": "02",
+    "monthYear": "APR 2026",
+    "name": "Muzyka bez granic",
+    "place": "Centrum Kongresowe â KrakÃ³w"
   },
   {
     "id": 3,
